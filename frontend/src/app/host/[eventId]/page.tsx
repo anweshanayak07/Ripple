@@ -123,7 +123,8 @@ export default function HostDashboard({ params }: { params: Promise<{ eventId: s
     // 2. Connect to Socket
     socket.connect();
     const joinRoom = () => {
-      socket.emit('join-room', { eventCode, role: 'host', name: 'Host' });
+      const token = (session as any)?.accessToken || (session as any)?.token;
+      socket.emit('join-room', { eventCode, role: 'host', name: 'Host', token });
     };
     if (socket.connected) {
       joinRoom();

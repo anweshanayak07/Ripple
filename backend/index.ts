@@ -343,13 +343,30 @@ app.get('/api/events/:code/leaderboard', async (req: any, res: any) => {
   }
 });
 
+async function verifyHostAuthorization(socket: any, eventCode: string): Promise<boolean> {
+  const userId = socket.data?.userId;
+  if (!userId) return false;
+
+  const event = await prisma.event.findUnique({ where: { code: eventCode } });
+  return event?.hostId === userId;
+}
+
 // --- Socket.io Handlers ---
 
 io.on('connection', (socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  socket.on('join-room', ({ eventCode, role, name }) => {
+  socket.on('join-room', ({ eventCode, role, name, token }) => {
     socket.join(eventCode);
+    if (role === 'host' && token) {
+      try {
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        socket.data.userId = decoded.id;
+      } catch (err) {
+        console.error('Socket JWT verification failed for host:', err);
+      }
+    }
+
     console.log(`Socket ${socket.id} joined room ${eventCode} as ${role} (name: ${name})`);
     
     // Optional nice-to-have: broadcast user count
@@ -359,6 +376,7 @@ io.on('connection', (socket) => {
 
   socket.on('launch-poll', async ({ eventCode, pollId }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       // Update poll status to live, and Event currentSlide to pollId
       await prisma.$transaction([
         prisma.poll.update({
@@ -398,6 +416,7 @@ io.on('connection', (socket) => {
 
   socket.on('relaunch-poll', async ({ eventCode, pollId }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       // Clear existing votes
       await prisma.vote.deleteMany({
         where: { pollId }
@@ -446,6 +465,7 @@ io.on('connection', (socket) => {
 
   socket.on('close-poll', async ({ eventCode, pollId }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       await prisma.poll.update({
         where: { id: pollId },
         data: { status: 'closed' }
@@ -463,6 +483,7 @@ io.on('connection', (socket) => {
 
   socket.on('change-slide', async ({ eventCode, slide }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       await prisma.event.update({
         where: { code: eventCode },
         data: { currentSlide: slide }
@@ -635,6 +656,7 @@ io.on('connection', (socket) => {
 
   socket.on('moderate-question', async ({ eventCode, questionId, action }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       if (action === 'delete') {
         await prisma.question.delete({ where: { id: questionId } });
         io.to(eventCode).emit('question-deleted', { questionId });
@@ -658,6 +680,7 @@ io.on('connection', (socket) => {
 
   socket.on('delete-question', async ({ eventCode, questionId }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       await prisma.question.delete({ where: { id: questionId } });
       io.to(eventCode).emit('question-deleted', { questionId });
     } catch (error) {
@@ -667,6 +690,7 @@ io.on('connection', (socket) => {
 
   socket.on('clear-all-questions', async ({ eventCode }) => {
     try {
+      if (!(await verifyHostAuthorization(socket, eventCode))) return;
       const event = await prisma.event.findUnique({ where: { code: eventCode } });
       if (!event) return;
 
