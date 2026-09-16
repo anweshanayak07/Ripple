@@ -28,7 +28,7 @@ export default function Footer() {
           </a>
 
           <a
-            href="https://linkedin.com/in/anweshanayak"
+            href="https://www.linkedin.com/in/anwesha-nayak-298a20249/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 hover:text-indigo-400 transition-colors"
@@ -41,7 +41,7 @@ export default function Footer() {
           </a>
 
           <a
-            href="mailto:anweshanayak646@gmail.com"
+            href="mailto:anweshanayak.work@gmail.com"
             className="flex items-center gap-1.5 hover:text-indigo-400 transition-colors"
             title="Send Email"
           >

@@ -220,7 +220,9 @@ To make **RIPPLE** even more impactful for enterprise presentations and software
 
 **Anwesha Nayak**  
 *Full-Stack Developer*  
-* **GitHub**: [@anweshanayak](https://github.com/anweshanayak)
+* **GitHub**: [@anweshanayak07](https://github.com/anweshanayak07)
+* **LinkedIn**: [Anwesha Nayak](https://www.linkedin.com/in/anwesha-nayak-298a20249/)
+* **Email**: [anweshanayak.work@gmail.com](mailto:anweshanayak.work@gmail.com)
 
 ---
 *Developed with Next.js 16, React 19, Express 5, and Socket.io.*
