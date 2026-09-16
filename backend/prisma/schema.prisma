@@ -67,6 +67,8 @@ model Vote {
   voterName      String   @default("Anonymous")
   scoreEarned    Int      @default(0)
   createdAt      DateTime @default(now())
+
+  @@unique([pollId, voterSessionId])
 }
 
 model Question {

@@ -521,7 +521,10 @@ io.on('connection', (socket) => {
         const lb = await getLeaderboardData(eventCode);
         io.to(eventCode).emit('leaderboard-updated', lb);
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'P2002') {
+        return; // Double-vote prevented by DB unique constraint
+      }
       console.error('Error casting vote:', error);
     }
   });
