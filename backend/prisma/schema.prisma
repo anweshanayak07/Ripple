@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  events    Event[]
+}
+
+model Event {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  title     String
+  hostId    String
+  host      User       @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  status       String     @default("live") // 'live' or 'ended'
+  currentSlide String     @default("WELCOME") // 'WELCOME', 'QNA', or pollId
+  polls     Poll[]
+  questions Question[]
+}
+
+model Poll {
+  id                   String   @id @default(uuid())
+  eventId              String
+  event                Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type                 String   @default("MULTIPLE_CHOICE") // 'MULTIPLE_CHOICE' or 'WORD_CLOUD'
+  question             String
+  status               String   @default("draft") // 'draft', 'live', 'closed'
+  timer                Int?     // duration in seconds
+  mediaUrl             String?
+  mediaType            String?  // 'image', 'audio', 'video'
+  isQuiz               Boolean  @default(false)
+  launchedAt           DateTime?
+  allowMultipleAnswers Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  options              Option[]
+  votes                Vote[]
+}
+
+model Option {
+  id        String   @id @default(uuid())
+  pollId    String
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  text      String
+  isCorrect Boolean  @default(false)
+  voteCount Int      @default(0)
+  votes     Vote[]
+}
+
+model Vote {
+  id             String   @id @default(uuid())
+  pollId         String
+  poll           Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId       String
+  option         Option   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  voterSessionId String
+  voterName      String   @default("Anonymous")
+  scoreEarned    Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  text        String
+  authorName  String
+  upvoteCount Int      @default(0)
+  status      String   @default("visible") // 'visible', 'hidden', 'answered'
+  createdAt   DateTime @default(now())
+  upvotes     Upvote[]
+}
+
+model Upvote {
+  id             String   @id @default(uuid())
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  voterSessionId String
+  createdAt      DateTime @default(now())
+
+  @@unique([questionId, voterSessionId])
+}
